@@ -2,8 +2,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Codoo</title>
 
 <style>
@@ -17,16 +17,55 @@ body {
   background: #0f0f0f;
   color: #eaeaea;
   height: 100vh;
-  display: flex;
-  flex-direction: column;
+  overflow: hidden;
 }
 
-/* TOP BAR */
+/* ---------- INTRO ---------- */
+#intro {
+  position: fixed;
+  inset: 0;
+  background: #0f0f0f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+  animation: introFade 3.5s forwards;
+}
+
+#intro h1 {
+  font-size: 48px;
+}
+
+#intro .co { color: #00e5ff; }
+#intro .doo { color: #00ff88; }
+
+@keyframes introFade {
+  0% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { opacity: 0; pointer-events: none; }
+}
+
+/* ---------- APP ---------- */
+#app {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  transform: translateY(-100vh);
+  animation: dropIn 0.9s cubic-bezier(.17,.67,.38,1.4) forwards;
+  animation-delay: 3.2s;
+}
+
+@keyframes dropIn {
+  to { transform: translateY(0); }
+}
+
+/* ---------- TOP BAR ---------- */
 .topbar {
   display: flex;
   align-items: center;
   padding: 10px 14px;
   border-bottom: 1px solid #222;
+  background: #0f0f0f;
 }
 
 .logo {
@@ -55,7 +94,7 @@ body {
   background: #222;
 }
 
-/* EDITOR */
+/* ---------- EDITOR ---------- */
 .editor {
   flex: 1;
   background: #1b1b1b;
@@ -74,92 +113,101 @@ textarea {
   line-height: 1.5;
 }
 
-/* RUN PANEL */
+/* ---------- RUN PANEL ---------- */
 .run-panel {
-  height: 40%;
+  height: 35%;
   display: none;
   flex-direction: column;
-  border-top: 1px solid #222;
+  background: #fff;
+}
+
+.run-drag {
+  height: 12px;
+  background: #ccc;
+  cursor: ns-resize;
 }
 
 .run-header {
+  background: #111;
+  color: white;
+  padding: 6px 10px;
   display: flex;
   justify-content: space-between;
-  padding: 6px 10px;
-  border-bottom: 1px solid #222;
+  align-items: center;
 }
 
 iframe {
   flex: 1;
   border: none;
-  background: white;
 }
 
 /* MOBILE */
 @media (max-width: 600px) {
-  textarea {
-    font-size: 13px;
-  }
+  textarea { font-size: 13px; }
 }
 </style>
 </head>
 
 <body>
 
-<div class="topbar">
-  <div class="logo">
-    <span class="co">Co</span><span class="doo">doo</span>
-  </div>
-
-  <div class="actions">
-    <button class="btn" onclick="copyCode()">Copy</button>
-    <button class="btn" onclick="runCode()">Run</button>
-  </div>
+<!-- INTRO -->
+<div id="intro">
+  <h1><span class="co">Co</span><span class="doo">doo</span></h1>
 </div>
 
-<div class="editor">
+<!-- APP -->
+<div id="app">
+
+  <div class="topbar">
+    <div class="logo">
+      <span class="co">Co</span><span class="doo">doo</span>
+    </div>
+    <div class="actions">
+      <button class="btn" onclick="copyCode()">Copy</button>
+      <button class="btn" onclick="runCode()">Run</button>
+    </div>
+  </div>
+
+  <div class="editor">
 <textarea id="code">
 <!DOCTYPE html>
 <html>
-<head>
-  <style>
-    body {
-      background: #111;
-      color: white;
-      font-family: sans-serif;
-    }
-  </style>
-</head>
-<body>
-
+<body style="background:#111;color:white">
 <h1>Hello Codoo</h1>
-<p>CoDoo runs JS, CSS, HTML</p>
 
-
+<script>
+document.body.onclick = () => alert("Running real JS 😏");
+</script>
 
 </body>
 </html>
 </textarea>
-</div>
-
-<div class="run-panel" id="runPanel">
-  <div class="run-header">
-    <span>Output</span>
-    <button class="btn" onclick="closeRun()">Close</button>
   </div>
-  <iframe id="output"></iframe>
+
+  <div class="run-panel" id="runPanel">
+    <div class="run-drag" id="dragBar"></div>
+    <div class="run-header">
+      <span>Output</span>
+      <button class="btn" onclick="closeRun()">Close</button>
+    </div>
+    <iframe id="output"></iframe>
+  </div>
+
 </div>
 
 <script>
+const runPanel = document.getElementById("runPanel");
+const dragBar = document.getElementById("dragBar");
+let dragging = false;
+
 function runCode() {
-  const code = document.getElementById("code").value;
-  const iframe = document.getElementById("output");
-  iframe.srcdoc = code;
-  document.getElementById("runPanel").style.display = "flex";
+  runPanel.style.display = "flex";
+  document.getElementById("output").srcdoc =
+    document.getElementById("code").value;
 }
 
 function closeRun() {
-  document.getElementById("runPanel").style.display = "none";
+  runPanel.style.display = "none";
 }
 
 function copyCode() {
@@ -168,13 +216,24 @@ function copyCode() {
   );
 }
 
-/* BASIC EMMET */
+/* DRAG RESIZE */
+dragBar.addEventListener("pointerdown", () => dragging = true);
+window.addEventListener("pointerup", () => dragging = false);
+window.addEventListener("pointermove", e => {
+  if (!dragging) return;
+  const h = window.innerHeight - e.clientY;
+  if (h > 100 && h < window.innerHeight - 100) {
+    runPanel.style.height = h + "px";
+  }
+});
+
+/* SIMPLE EMMET */
 document.getElementById("code").addEventListener("keydown", e => {
   if (e.key === "Tab") {
     e.preventDefault();
-    const area = e.target;
-    if (area.value.endsWith("!")) {
-      area.value = area.value.replace(/!$/, 
+    const a = e.target;
+    if (a.value.endsWith("!")) {
+      a.value = a.value.replace(/!$/,
 `<!DOCTYPE html>
 <html>
 <head>
