@@ -1,9 +1,10 @@
 
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Codoo</title>
 
 <style>
@@ -23,7 +24,7 @@ body {
   height: 48px;
   display: flex;
   align-items: center;
-  padding: 0 10px;
+  padding: 0 14px;
   border-bottom: 1px solid #222;
 }
 .logo {
@@ -34,47 +35,28 @@ body {
 .actions {
   margin-left: auto;
   display: flex;
-  gap: 6px;
+  gap: 8px;
 }
 .btn {
   background: #141414;
   color: #eaeaea;
   border: 1px solid #2a2a2a;
-  padding: 4px 10px;
+  padding: 6px 12px;
   cursor: pointer;
-  font-size: 14px;
 }
 .btn:hover { background: #1d1d1d; }
 
-/* ===== MENU ===== */
-#menu {
-  position: fixed;
-  top: 48px;
-  left: 0;
-  width: 220px;
-  height: calc(100% - 48px);
-  background: #111;
-  border-right: 1px solid #222;
+/* ===== SYMBOL BUTTONS ===== */
+.symbol-btn {
   display: flex;
-  flex-direction: column;
-  padding: 10px;
-  transform: translateX(-100%);
-  transition: transform 0.3s;
-  z-index: 30;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: 4px;
 }
-#menu.show { transform: translateX(0); }
-.menu-group { margin-bottom: 16px; }
-.menu-group label { font-weight: bold; margin-bottom: 6px; display: block; }
-.menu-group button {
-  width: 100%;
-  padding: 6px;
-  margin-bottom: 4px;
-  background: #222;
-  border: none;
-  color: #eaeaea;
-  cursor: pointer;
-}
-.menu-group button:hover { background: #333; }
 
 /* ===== EDITOR ===== */
 #editor {
@@ -95,6 +77,7 @@ body {
 }
 #runOverlay.show { display: flex; }
 #runOverlay.visible { opacity: 1; }
+
 .runPanel {
   width: 92%;
   max-width: 900px;
@@ -105,6 +88,8 @@ body {
   border-radius: 6px;
   overflow: hidden;
 }
+
+/* ===== RUN HEADER ===== */
 .runHeader {
   background: #111;
   color: #fff;
@@ -115,32 +100,56 @@ body {
 }
 iframe { flex: 1; border: none; }
 
-/* ===== TEMPLATES FLOAT ===== */
-#templatePanel {
-  position: fixed;
-  top: 60px;
-  left: 240px;
-  width: 80%;
-  max-width: 800px;
-  height: 70%;
-  background: #222;
-  border-radius: 6px;
-  display: none;
-  flex-direction: column;
-  padding: 12px;
-  z-index: 40;
-}
-#templatePanel.show { display: flex; overflow: auto; }
-.template-header { font-weight: bold; margin-bottom: 8px; color: #eaeaea; }
-.template-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
-.template-grid button {
-  padding: 6px;
-  background: #333;
-  border: none;
+/* ===== TEMPLATES BUTTON ===== */
+#templatesBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #141414;
   color: #eaeaea;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid #2a2a2a;
   cursor: pointer;
 }
-.template-grid button:hover { background: #444; }
+#templatesBtn:hover { background: #1d1d1d; }
+
+#templatesPanel {
+  position: fixed;
+  top: 52px;
+  left: 10px;
+  width: 90%;
+  max-width: 350px;
+  max-height: 70%;
+  background: #141414;
+  color: #eaeaea;
+  border: 1px solid #2a2a2a;
+  border-radius: 6px;
+  overflow-y: auto;
+  display: none;
+  flex-direction: column;
+  padding: 10px;
+  z-index: 60;
+  box-shadow: 0 0 12px rgba(0,0,0,0.5);
+}
+.template-category {
+  font-weight: bold;
+  margin: 6px 0 4px;
+}
+.template-item {
+  background: #1a1a1a;
+  padding: 6px 10px;
+  margin: 2px 0;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.template-item:hover { background: #222; }
+
+/* ===== MOBILE FIRST ===== */
+@media(max-width:600px){
+  #templatesPanel { top: 50px; left: 5px; width: 95%; max-width: none; max-height: 60%; }
+  .runPanel { width: 95%; height: 75%; }
+}
 </style>
 
 <!-- Monaco Loader -->
@@ -151,23 +160,18 @@ iframe { flex: 1; border: none; }
 
 <!-- TOP BAR -->
 <div class="topbar">
-  <button class="btn" id="menuBtn">&#9776;</button>
   <div class="logo">Codoo</div>
   <div class="actions">
-    <button class="btn" id="undoBtn" title="Undo">&#8592;</button>
-    <button class="btn" id="redoBtn" title="Redo">&#8594;</button>
+    <button class="symbol-btn btn" id="undoBtn">&#x2190;</button>
+    <button class="symbol-btn btn" id="redoBtn">&#x2192;</button>
+    <button class="btn" id="templatesBtn">&#x3C;/&#x3E; Templates</button>
     <button class="btn" onclick="copyCode()">Copy</button>
     <button class="btn" onclick="runCode()">Run</button>
   </div>
 </div>
 
-<!-- MENU -->
-<div id="menu">
-  <div class="menu-group">
-    <label>Templates</label>
-    <button onclick="openTemplates()">Open Templates</button>
-  </div>
-</div>
+<!-- TEMPLATES PANEL -->
+<div id="templatesPanel"></div>
 
 <!-- EDITOR -->
 <div id="editor"></div>
@@ -183,18 +187,6 @@ iframe { flex: 1; border: none; }
   </div>
 </div>
 
-<!-- TEMPLATES PANEL -->
-<div id="templatePanel">
-  <div class="template-header">HTML Templates</div>
-  <div class="template-grid">
-    <button onclick="loadTemplate('htmlBoiler')">Boilerplate</button>
-    <button onclick="loadTemplate('htmlForm')">Form</button>
-    <button onclick="loadTemplate('htmlGrid')">Grid</button>
-    <button onclick="loadTemplate('htmlButtons')">Buttons</button>
-    <button onclick="loadTemplate('htmlText')">Text</button>
-  </div>
-</div>
-
 <script>
 let editor;
 
@@ -205,11 +197,8 @@ require(['vs/editor/editor.main'], () => {
     value: `<!DOCTYPE html>
 <html>
 <body style="background:#111;color:white;font-family:sans-serif">
-<h1>Codoo</h1>
-<input placeholder="Type something">
-<script>
-document.querySelector("input").oninput = e => console.log(e.target.value);
-<\/script>
+<h1>Hello World</h1>
+<script>console.log("Hello World")<\/script>
 </body>
 </html>`,
     language: 'html',
@@ -217,7 +206,9 @@ document.querySelector("input").oninput = e => console.log(e.target.value);
     automaticLayout: true,
     fontSize: 14,
     minimap: { enabled: false },
-    wordWrap: 'on'
+    wordWrap: 'on',
+    autoClosingBrackets: 'always',
+    autoClosingQuotes: 'always'
   });
 });
 
@@ -241,24 +232,44 @@ function copyCode() { navigator.clipboard.writeText(editor.getValue()); }
 document.getElementById('undoBtn').onclick = () => editor.trigger('keyboard', 'undo', null);
 document.getElementById('redoBtn').onclick = () => editor.trigger('keyboard', 'redo', null);
 
-/* ===== MENU ===== */
-const menuBtn = document.getElementById('menuBtn');
-const menu = document.getElementById('menu');
-menuBtn.onclick = () => menu.classList.toggle('show');
-
 /* ===== TEMPLATES ===== */
-function openTemplates() {
-  const panel = document.getElementById('templatePanel');
-  panel.classList.add('show');
-}
-function loadTemplate(name) {
-  if(name==='htmlBoiler') editor.setValue('<!DOCTYPE html>\\n<html>\\n<head><title>Boilerplate</title></head>\\n<body>\\n<h1>Hello Codoo</h1>\\n</body>\\n</html>');
-  if(name==='htmlForm') editor.setValue('<form><input placeholder="Name"><button>Submit</button></form>');
-  if(name==='htmlGrid') editor.setValue('<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;"><div>A</div><div>B</div></div>');
-  if(name==='htmlButtons') editor.setValue('<button>Click Me</button><button>Another</button>');
-  if(name==='htmlText') editor.setValue('<p>Sample text</p>');
-  document.getElementById('templatePanel').classList.remove('show');
-  menu.classList.remove('show');
+const templates = {
+  "HTML": [
+    `<!DOCTYPE html>\n<html>\n<body>\n<h1>Hello World</h1>\n</body>\n</html>`,
+    `<!DOCTYPE html>\n<html>\n<body>\n<h1>Hello World</h1>\n<p>Paragraph</p>\n</body>\n</html>`
+  ],
+  "CSS": [
+    `body{background:#111;color:white;font-family:sans-serif}\nh1{color:#fff}`,
+    `body{background:#000;color:#fff}\np{color:#ccc}`
+  ],
+  "JS": [
+    `console.log("Hello World");`,
+    `alert("Hello World");`
+  ]
+};
+const templatesPanel = document.getElementById('templatesPanel');
+const templatesBtn = document.getElementById('templatesBtn');
+
+templatesBtn.onclick = () => { templatesPanel.style.display = templatesPanel.style.display==='flex'?'none':'flex'; renderTemplates(); };
+
+function renderTemplates() {
+  templatesPanel.innerHTML = '';
+  for(const cat in templates){
+    const catEl = document.createElement('div');
+    catEl.className = 'template-category';
+    catEl.textContent = cat;
+    templatesPanel.appendChild(catEl);
+    templates[cat].forEach(t => {
+      const tBtn = document.createElement('div');
+      tBtn.className = 'template-item';
+      tBtn.textContent = 'Template';
+      tBtn.onclick = () => {
+        editor.setValue(t);
+        templatesPanel.style.display = 'none';
+      };
+      templatesPanel.appendChild(tBtn);
+    });
+  }
 }
 </script>
 
