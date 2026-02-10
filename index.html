@@ -2,142 +2,152 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Codoo</title>
+
 <style>
-/* BODY & FONTS */
+/* ===== BASE ===== */
+* { box-sizing: border-box; }
 body {
   margin: 0;
-  font-family: Consolas, monospace;
-  background: #0f0f0f;
+  background: #0b0b0b;
   color: #eaeaea;
   height: 100vh;
-  display: flex;
-  flex-direction: column;
+  font-family: system-ui, sans-serif;
   overflow: hidden;
 }
 
-/* INTRO ANIMATION */
-#intro {
+/* ===== TOP BAR ===== */
+.topbar {
+  height: 48px;
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  border-bottom: 1px solid #222;
+}
+.logo {
+  font-family: Consolas, monospace;
+  font-weight: bold;
+  font-size: 16px;
+}
+.actions {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+}
+.btn {
+  background: #141414;
+  color: #eaeaea;
+  border: 1px solid #2a2a2a;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+.btn:hover { background: #1d1d1d; }
+
+/* ===== EDITOR ===== */
+#editor {
+  height: calc(100vh - 48px);
+}
+
+/* ===== RUN PANEL ===== */
+#runOverlay {
   position: fixed;
   inset: 0;
-  background: #0f0f0f;
-  display: flex;
+  background: rgba(0,0,0,0.6);
+  display: none;
   align-items: center;
   justify-content: center;
-  z-index: 999;
-  animation: introFade 3s forwards;
-}
-#intro h1 {
-  font-size: 48px;
-}
-.co { color: white; }
-.doo { color: #00e5ff; }
-@keyframes introFade {
-  0%,80% { opacity: 1; }
-  100% { opacity: 0; pointer-events: none; }
-}
-
-/* TOPBAR */
-.topbar {
-  display: flex;
-  align-items: center;
-  padding: 8px 12px;
-  background: #111;
-  border-bottom: 1px solid #222;
+  z-index: 50;
   opacity: 0;
-  animation: dropIn 0.5s forwards;
-  animation-delay: 3s;
+  transition: opacity 1s ease;
 }
-.logo { font-weight: bold; font-size: 18px; }
-.actions { margin-left: auto; display: flex; gap: 6px; }
-.btn {
-  background: #1a1a1a;
-  color: #eaeaea;
-  border: 1px solid #333;
-  padding: 5px 10px;
-  cursor: pointer;
-  border-radius: 4px;
-  transition: 0.2s;
-}
-.btn:hover { background: #222; }
 
-/* EDITOR */
-#editor {
-  flex: 1;
-  background: #1e1e1e; /* CMD-like dark bg */
-  animation: dropIn 0.5s forwards;
-  animation-delay: 3.1s;
+#runOverlay.show {
+  display: flex;
 }
-@keyframes dropIn { from {transform: translateY(-50px);opacity:0} to {transform: translateY(0);opacity:1} }
 
-/* RUN PANEL */
-#runPanel {
-  position: fixed;
-  inset: 0;
-  background: #fff;
-  display: none;
+#runOverlay.visible {
+  opacity: 1;
+}
+
+.runPanel {
+  width: 92%;
+  max-width: 900px;
+  height: 80%;
+  background: #ffffff;
+  display: flex;
   flex-direction: column;
-  z-index: 20;
+  border-radius: 6px;
+  overflow: hidden;
 }
-.run-header {
+
+/* ===== RUN HEADER ===== */
+.runHeader {
   background: #111;
-  color: white;
-  padding: 8px;
+  color: #fff;
+  padding: 8px 10px;
   display: flex;
   justify-content: space-between;
+  align-items: center;
 }
-iframe { flex: 1; border: none; }
+iframe {
+  flex: 1;
+  border: none;
+}
 </style>
 
-<!-- MONACO EDITOR LOADER -->
-<script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js"></script>
+<!-- Monaco Loader -->
+<script src="https://unpkg.com/monaco-editor@0.45.0/min/vs/loader.js"></script>
 </head>
+
 <body>
 
-<!-- INTRO -->
-<div id="intro">
-  <h1><span class="co">Co</span><span class="doo">doo</span></h1>
-</div>
-
-<!-- APP -->
+<!-- TOP BAR -->
 <div class="topbar">
-  <div class="logo"><span class="co">Co</span><span class="doo">doo</span></div>
+  <div class="logo">Codoo</div>
   <div class="actions">
     <button class="btn" onclick="copyCode()">Copy</button>
     <button class="btn" onclick="runCode()">Run</button>
   </div>
 </div>
 
+<!-- EDITOR -->
 <div id="editor"></div>
 
-<!-- RUN PANEL -->
-<div id="runPanel">
-  <div class="run-header">
-    <span>Output</span>
-    <div>
-      <button class="btn" onclick="document.getElementById('runPanel').requestFullscreen()">Fullscreen</button>
+<!-- RUN OVERLAY -->
+<div id="runOverlay">
+  <div class="runPanel">
+    <div class="runHeader">
+      <span>Output</span>
       <button class="btn" onclick="closeRun()">Close</button>
     </div>
+    <iframe id="output"></iframe>
   </div>
-  <iframe id="output"></iframe>
 </div>
 
 <script>
 let editor;
 
-require.config({ paths: { vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs' }});
-require(['vs/editor/editor.main'], function() {
+/* ===== MONACO INIT ===== */
+require.config({
+  paths: { vs: 'https://unpkg.com/monaco-editor@0.45.0/min/vs' }
+});
+
+require(['vs/editor/editor.main'], () => {
   editor = monaco.editor.create(document.getElementById('editor'), {
     value: `<!DOCTYPE html>
 <html>
-<body style="background:#111;color:white">
+<body style="background:#111;color:white;font-family:sans-serif">
+
 <h1>Codoo</h1>
-<input placeholder="Type here">
+<input placeholder="Type something">
+
 <script>
-document.querySelector("input").oninput = e => console.log(e.target.value);
-</script>
+document.querySelector("input").oninput =
+  e => console.log(e.target.value);
+<\/script>
+
 </body>
 </html>`,
     language: 'html',
@@ -145,25 +155,29 @@ document.querySelector("input").oninput = e => console.log(e.target.value);
     automaticLayout: true,
     fontSize: 14,
     minimap: { enabled: false },
-    wordWrap: 'on',
-    autoClosingBrackets: 'always',
-    autoClosingQuotes: 'always',
+    wordWrap: 'on'
   });
 });
 
-// RUN FUNCTION
+/* ===== RUN ===== */
 function runCode() {
-  const panel = document.getElementById('runPanel');
-  panel.style.display = 'flex';
+  const overlay = document.getElementById('runOverlay');
+  overlay.classList.add('show');
+  requestAnimationFrame(() => overlay.classList.add('visible'));
   document.getElementById('output').srcdoc = editor.getValue();
 }
+
 function closeRun() {
-  document.getElementById('runPanel').style.display = 'none';
+  const overlay = document.getElementById('runOverlay');
+  overlay.classList.remove('visible');
+  setTimeout(() => overlay.classList.remove('show'), 1000);
 }
+
+/* ===== COPY ===== */
 function copyCode() {
   navigator.clipboard.writeText(editor.getValue());
-  alert('Code copied!');
 }
 </script>
+
 </body>
 </html>
